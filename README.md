@@ -6,11 +6,9 @@ Can be Download <a href="https://nodejs.org">here</a>.
 
 ## Installation ##
 
-1.Download node Stable node version from the link https://nodejs.org/en/.
+1.Open the console and get inside policyReport directory.
 
-3.Open the console and get inside policyReport directory.
-
-4.Run the next commands in the console: ```npm install ```
+2.Run the next commands in the console: ```npm install ```
 
 ## How to run ##
 
