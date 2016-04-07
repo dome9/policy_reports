@@ -265,8 +265,10 @@ function getInputs(login){
   }
   return deferred.promise;
 }
+var generalCounter =0;
 var MyStream = require('json2csv-stream');
 function createCsv(data,mode,path){
+  generalCounter++;
   console.log('creating the report...')
   var deferred = Q.defer();
   //var json2csv = require('json2csv');
@@ -297,11 +299,11 @@ function createCsv(data,mode,path){
       return 0 < data.length && counter<80000
     },
     function (next) {
-      if(counter==0){
+      if(counter==0&&generalCounter==0){
         var headers='';
         for(var prop in data[0]){
-            headers+=prop+',';
-          }
+          headers+=prop+',';
+        }
         wstream.write(headers+'\n');
         var dataToWrite=data.splice(0,100);
         counter+=100;
@@ -333,7 +335,10 @@ function createCsv(data,mode,path){
       // All things are done!
       if(0 < data.length && counter>=80000){
         wstream.end(function(){
-          return createCsv(data,'a',path)
+          createCsv(data,'a',path)
+            .then(function(){
+              deferred.resolve();
+            })
         });
       }
       else wstream.end(function(){
