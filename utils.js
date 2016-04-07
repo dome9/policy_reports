@@ -268,31 +268,9 @@ function getInputs(login){
 var generalCounter =0;
 var MyStream = require('json2csv-stream');
 function createCsv(data,mode,path){
-  generalCounter++;
+  var woComma;
   console.log('creating the report...')
   var deferred = Q.defer();
-  //var json2csv = require('json2csv');
-  //var fields=[];
-  //for(var prop in data[0]){
-  //  fields.push(prop);
-  //}
-  //json2csv({ data: data, fields: fields }, function(err, csv) {
-  //  if (err) {
-  //    deferred.reject(err);
-  //    throw err
-  //  }
-  //  else{
-  //    console.log(csv);
-  //    writeToFile('./report.csv',csv)
-  //      .then(function(){
-  //        deferred.resolve();
-  //      },function(err){
-  //        throw err;
-  //        deferred.reject(err);
-  //      });
-  //  }
-  //});
-  //return deferred.promise;
   var counter=0;
   var wstream = fs.createWriteStream(path,{flags: mode});
   async.whilst(function () {
@@ -300,6 +278,7 @@ function createCsv(data,mode,path){
     },
     function (next) {
       if(counter==0&&generalCounter==0){
+        generalCounter++;
         var headers='';
         for(var prop in data[0]){
           headers+=prop+',';
@@ -309,8 +288,14 @@ function createCsv(data,mode,path){
         counter+=100;
         dataToWrite.forEach(function(el){
           for(var prop in el){
-            if(typeof(el[prop])=="object") wstream.write(JSON.stringify(el[prop])+',');
-            else wstream.write(el[prop]+',');
+            if(typeof(el[prop])=="object") {
+              woComma=commaHandler(JSON.stringify(el[prop]));
+              wstream.write(woComma+',');
+            }
+            else {
+              woComma=commaHandler(el[prop]);
+              wstream.write(woComma+',');
+            }
           }
           wstream.write(el[prop]+'\n');
         });
@@ -321,8 +306,14 @@ function createCsv(data,mode,path){
         counter+=100;
         dataToWrite.forEach(function(el,idx){
           for(var prop in el){
-            if(typeof(el[prop])=="object") wstream.write(JSON.stringify(el[prop])+',');
-            else wstream.write(el[prop]+',');
+            if(typeof(el[prop])=="object") {
+              woComma=commaHandler(JSON.stringify(el[prop]));
+              wstream.write(woComma+',');
+            }
+            else {
+              woComma=commaHandler(el[prop]);
+              wstream.write(woComma+',');
+            }
           }
           wstream.write(el[prop]+'\n');
         });
@@ -349,6 +340,25 @@ function createCsv(data,mode,path){
 
 
   return deferred.promise;
+}
+function commaHandler(obj){
+  if(typeof obj!= 'number'&&typeof obj!='undefined'){
+    if (obj.indexOf(',')!=-1){
+      var newObg='';
+      var arr=obj.split(',');
+      arr.forEach(function(el){
+        newObg+=' '+el+' ';
+      });
+      return newObg;
+    }
+    else{
+      return obj;
+    }
+  }
+
+  else {
+    return obj;
+  }
 }
 
 exports.createCsv = function (data,mode,path) {
