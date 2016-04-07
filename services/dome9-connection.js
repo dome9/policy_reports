@@ -62,7 +62,7 @@ Dome9Connection.prototype.login = function(){
 
       if(xsrfToken){
         self.xsrfToken = re.exec(xsrfToken)[1];
-        logger.info(self.xsrfToken);
+        //logger.info(self.xsrfToken);
       }
 
       var matches = /D9\.csrftoken = \$\('<input name="__RequestVerificationToken" type="hidden" value="(.*)" \/>/.exec(gen1AccessLeasesHtml);

@@ -229,11 +229,12 @@ function RequestOptions(url, method, body,xsrf) {
   }
 }
 
-exports.getInputs = function () {
-  return getInputs();
+exports.getInputs = function (login) {
+  return getInputs(login);
 };
-function getInputs(){
+function getInputs(login){
   var deferred = Q.defer();
+  if(login.password&&login.username) deferred.resolve(login);
   var properties = [
     {
       name: 'username',
@@ -265,7 +266,7 @@ function getInputs(){
   return deferred.promise;
 }
 var MyStream = require('json2csv-stream');
-function createCsv(data,mode){
+function createCsv(data,mode,path){
   console.log('creating the report...')
   var deferred = Q.defer();
   //var json2csv = require('json2csv');
@@ -291,7 +292,7 @@ function createCsv(data,mode){
   //});
   //return deferred.promise;
   var counter=0;
-  var wstream = fs.createWriteStream('myOutput.csv',{flags: mode});
+  var wstream = fs.createWriteStream(path,{flags: mode});
   async.whilst(function () {
       return 0 < data.length && counter<80000
     },
@@ -331,7 +332,8 @@ function createCsv(data,mode){
     function (err) {
       // All things are done!
       if(0 < data.length && counter>=80000){
-        wstream.end(function(){          return createCsv(data,'a')
+        wstream.end(function(){
+          return createCsv(data,'a',path)
         });
       }
       else wstream.end(function(){
@@ -344,8 +346,8 @@ function createCsv(data,mode){
   return deferred.promise;
 }
 
-exports.createCsv = function (data) {
-  return createCsv(data);
+exports.createCsv = function (data,mode,path) {
+  return createCsv(data,mode,path);
 }
 exports.RequestOptions = function (url, method, body,xsrf) {
   return RequestOptions(url, method, body,xsrf);
@@ -369,4 +371,43 @@ function writeToFile(filePath,data){
 
 exports.writeToFile = function (filePath,data) {
   return writeToFile(filePath,data);
+}
+
+var dome9connection = require('./services/dome9-connection.js');
+var cloudInstance = require('./services/instances.js');
+var cloudSecurityGroups = require('./services/cloudSecurityGroups.js');
+function selector(type,conf){
+  var deferred = Q.defer();
+  dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey);
+  cloudInstance = new cloudInstance(dome9connection);
+  cloudSecurityGroups = new cloudSecurityGroups(dome9connection);
+
+  switch(type){
+    case 'instances':
+      Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
+        .then(function (data) {
+
+          deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
+        }, function (err) {
+          console.error(err);
+          deferred.reject(err);
+        });
+      break;
+
+    default:
+      Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
+        .then(function (data) {
+          deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
+        }, function (err) {
+          console.error(err);
+          deferred.reject(err);
+        });
+      break;
+  }
+
+  return deferred.promise;
+}
+
+exports.selector = function (type,conf) {
+  return selector(type,conf);
 }

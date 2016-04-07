@@ -11,9 +11,10 @@
     "url": "tools"
   },
   "author": "Arik Blumin",
-  "license": "ISC",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "async": "^2.0.0-rc.2",
+    "commander": "^2.9.0",
     "cookie": "^0.2.3",
     "json2csv": "^3.2.0",
     "json2csv-stream": "^0.1.3",
