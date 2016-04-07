@@ -2,7 +2,7 @@
 ## Requirements ##
 * 8GB internal memory.
 * NodeJs stable version 4.3.2 or later. 
-Can be Download <a href="https://nodejs.org">here</a>.
+( Can be Download <a href="https://nodejs.org">here</a> ).
 
 ## Installation ##
 
