@@ -298,7 +298,7 @@ function createCsv(data,mode,path){
               wstream.write(woComma+',');
             }
           }
-          wstream.write(el[prop]+'\n');
+          wstream.write('\n');
         });
         next();
       }
@@ -317,7 +317,7 @@ function createCsv(data,mode,path){
               wstream.write(woComma+',');
             }
           }
-          wstream.write(el[prop]+'\n');
+          wstream.write('\n');
         });
         next();
       }
