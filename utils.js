@@ -288,6 +288,7 @@ function createCsv(data,mode,path){
         counter+=100;
         dataToWrite.forEach(function(el){
           for(var prop in el){
+            if(!el[prop]||el[prop]==null) el[prop]='';
             if(typeof(el[prop])=="object") {
               woComma=commaHandler(JSON.stringify(el[prop]));
               wstream.write(woComma+',');
@@ -306,6 +307,7 @@ function createCsv(data,mode,path){
         counter+=100;
         dataToWrite.forEach(function(el,idx){
           for(var prop in el){
+            if(!el[prop]||el[prop]==null) el[prop]='';
             if(typeof(el[prop])=="object") {
               woComma=commaHandler(JSON.stringify(el[prop]));
               wstream.write(woComma+',');
