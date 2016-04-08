@@ -1,28 +1,32 @@
 
 ## Requirements ##
-* 8GB internal memory.
 * NodeJs stable version 4.3.2 or later. 
 ( Can be Download <a href="https://nodejs.org">here</a> )
 
 ## Installation ##
+1. Clone this repo into your local machine
 
-1.Open the console and get inside policyReport directory.
+```git clone https://github.com/Dome9/policy_reports.git```
+2. Navigate to the policy reports folder:
 
-2.Run the next commands in the console: ```npm install ```
+```cd policy_reports``` 
+3. Install the tool's dependencies:
+
+```npm install ```
 
 ## How to run ##
 
-1. Open the console and get inside policyReport directory.
+1. Using console, navigate to  policy_reports directory.
 
-2. run the command "node policyGenerator.js"
+2. run the command ```node policyGenerator.js --help``` to understand the command line parameters
 
-3. It will ask you to insert your Dome9 username and password.
+3. If running the tools without specifying (Dome9) username / password - the tool will prompt for them.
 
 You will find the csv file in the policyReport directory.
 
 ### Command Line options ###
 
-* -r <report type> or --report <report type> for choosing the report type, currentlu only instances relevant and it also th default.
-* -f <PATH> or --file <PATH> for choosing alternative path for thr report file, the default us under the policyReport directory, report.csv.
+* -r <report type> or --report <report type> for choosing the report type. Currentlu the only supported report type is 'instances' (it is also th default) mode to come soon.
+* -f <PATH> or --file <PATH> for writing the report to file instead of to the standard output.
  
 

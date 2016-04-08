@@ -33,8 +33,7 @@ module.exports = {
   accountId:accountId,
   logger: new (winston.Logger)({
     transports: [
-      new (winston.transports.Console)(),
-      new (winston.transports.File)({filename: 'api-tests.log'})
+      new (winston.transports.Console)({stderrLevels:['error', 'debug', 'info', 'warn'], level: 'debug'}) // in this CLI tool - we'll write all logs to STDERR except the resutl of the tool.
     ]
   }),
   RequestOptions:RequestOptions

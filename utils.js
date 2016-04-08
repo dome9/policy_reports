@@ -11,6 +11,8 @@ var prompt = require('prompt');
 var fs = require('fs');
 var async = require('async');
 
+var logger = globals.logger;
+
 
 function loadFromFile(filename) {
   var fs = require('fs');
@@ -19,12 +21,7 @@ function loadFromFile(filename) {
   return newdata;
 };
 
-exports.loadFromFile = function (filename) {
-  return loadFromFile(filename);
-};
-
-
-
+exports.loadFromFile = loadFromFile;
 
 function addCookie(collectedCookies, cookie) {
   var cookieFlag = false;
@@ -80,10 +77,10 @@ function doFirstRequest(collectedCookies, parameters, logger){
       deferred.reject(err);
     }
     else if (undefined !== res) {
-      logger.info('Processing request for tokens in Cookies...%s %s',reqOpts.method, reqOpts.url);
+      logger.debug('Processing request for tokens in Cookies...%s %s',reqOpts.method, reqOpts.url);
 
       if ((res.statusCode === 304) || (res.statusCode === 302) || (res.statusCode === 200)) {
-        logger.info('status Response ok:',res.statusCode);
+        logger.debug('status Response ok:',res.statusCode);
       }
       else {
         logger.error('status Response is NOT ok - ', res.statusCode);
@@ -141,7 +138,6 @@ function doSecondRequest(collectedCookies, parameters, logger,username,password)
       if ((undefined !== res.headers) && (undefined !== res.headers['Set-Cookie'] )) {
         addCookie(collectedCookies, res.headers['Set-cookie']);
       }
-      logger.info("log-in is done");
       deferred.resolve();
     }
 
@@ -163,9 +159,7 @@ function reqManager(requestOptionsIn){
   reqExecuter
 
 }
-exports.doLogin = function (collectedCookies, parameters, logger,username,password) {
-  return doLogin(collectedCookies, parameters, logger,username,password);
-};
+exports.doLogin = doLogin;
 
 function basicRequestProcess(err,res,body,collectedCookies, parameters, logger,reqOpts) {
 
@@ -229,52 +223,63 @@ function RequestOptions(url, method, body,xsrf) {
   }
 }
 
-exports.getInputs = function (login) {
-  return getInputs(login);
-};
+exports.getInputs = getInputs;
+
 function getInputs(login){
   var deferred = Q.defer();
-  if(login.password&&login.username) deferred.resolve(login);
-  var properties = [
-    {
-      name: 'username',
-      validator: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-      warning: 'Username must be only letters, spaces, or dashes'
-    },
-    {
-      name: 'password',
-      hidden: true
+  if(login.password&&login.username) {
+    deferred.resolve(login);
+  }
+  else{
+    var properties = [
+      {
+        name: 'username',
+        validator: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        warning: 'Username must be only letters, spaces, or dashes'
+      },
+      {
+        name: 'password',
+        hidden: true
+      }
+    ];
+
+    prompt.start();
+
+    prompt.get(properties, function (err, result) {
+      if (err) { return onErr(err); }
+      logger.debug('Command-line input received:');
+      var conf={
+        username:result.username,
+        password:result.password
+      }
+      deferred.resolve(conf);
+    });
+
+    function onErr(err) {
+      logger.debug(err);
+      return 1;
     }
-  ];
-
-  prompt.start();
-
-  prompt.get(properties, function (err, result) {
-    if (err) { return onErr(err); }
-    console.log('Command-line input received:');
-    var conf={
-      username:result.username,
-      password:result.password
-    }
-    deferred.resolve(conf);
-  });
-
-  function onErr(err) {
-    console.log(err);
-    return 1;
   }
   return deferred.promise;
 }
 var generalCounter =0;
-var MyStream = require('json2csv-stream');
-function createCsv(data,mode,path){
+
+function createCsv(data,path){
+  logger.info('Creating the report. Writing to: ' + (path ? path : 'standard output'));
+  return createCsvRec(data,undefined, path);
+}
+
+function createCsvRec(data,mode,path){
+  var MAX_ITERATIONS_PER_BATCH = 80000;
+  logger.debug("Writing batch");
+  
   var woComma;
-  console.log('creating the report...')
   var deferred = Q.defer();
   var counter=0;
-  var wstream = fs.createWriteStream(path,{flags: mode});
+  var wstream = path? fs.createWriteStream(path,{flags: mode}): process.stdout;
+  
   async.whilst(function () {
-      return 0 < data.length && counter<80000
+      return 0 < data.length && counter< MAX_ITERATIONS_PER_BATCH ;
     },
     function (next) {
       if(counter==0&&generalCounter==0){
@@ -284,62 +289,53 @@ function createCsv(data,mode,path){
           headers+=prop+',';
         }
         wstream.write(headers+'\n');
-        var dataToWrite=data.splice(0,100);
-        counter+=100;
-        dataToWrite.forEach(function(el){
+      }
+      
+      var dataToWrite=data.splice(0,100);
+      counter+=100;
+      dataToWrite.forEach(function(el){
           for(var prop in el){
             if(!el[prop]||el[prop]==null) el[prop]='';
             if(typeof(el[prop])=="object") {
-              woComma=commaHandler(JSON.stringify(el[prop]));
-              wstream.write(woComma+',');
+                woComma=commaHandler(JSON.stringify(el[prop]));
+                wstream.write(woComma+',');
             }
             else {
-              woComma=commaHandler(el[prop]);
-              wstream.write(woComma+',');
+                woComma=commaHandler(el[prop]);
+                wstream.write(woComma+',');
             }
           }
           wstream.write('\n');
-        });
-        next();
-      }
-      else{
-        var dataToWrite=data.splice(0,100);
-        counter+=100;
-        dataToWrite.forEach(function(el,idx){
-          for(var prop in el){
-            if(!el[prop]||el[prop]==null) el[prop]='';
-            if(typeof(el[prop])=="object") {
-              woComma=commaHandler(JSON.stringify(el[prop]));
-              wstream.write(woComma+',');
-            }
-            else {
-              woComma=commaHandler(el[prop]);
-              wstream.write(woComma+',');
-            }
-          }
-          wstream.write('\n');
-        });
-        next();
-      }
-
-
-    },
-    function (err) {
-      // All things are done!
-      if(0 < data.length && counter>=80000){
-        wstream.end(function(){
-          createCsv(data,'a',path)
-            .then(function(){
-              deferred.resolve();
-            })
-        });
-      }
-      else wstream.end(function(){
-        console.log('report created')
-        deferred.resolve();
       });
+      next();
+      
+    },
+    function done (err) {
+      if(0 < data.length && counter>= MAX_ITERATIONS_PER_BATCH){
+        // We need to run another batch
+        if(!path){
+          // writing to standard output - no need to stop the stream
+          createCsvRec(data,'a',path)
+          .then(deferred.resolve);
+        }
+        else{
+          wstream.end(function(){
+            createCsvRec(data,'a',path)
+            .then( deferred.resolve);
+          });
+        }
+      }
+      else{ 
+        // We are done. No more batches
+        if(!path){
+          // writing to standard output - no need to stop the stream
+          deferred.resolve();
+        }
+        else{
+          wstream.end(deferred.resolve);
+        }
+      }
     });
-
 
   return deferred.promise;
 }
@@ -363,68 +359,39 @@ function commaHandler(obj){
   }
 }
 
-exports.createCsv = function (data,mode,path) {
-  return createCsv(data,mode,path);
-}
-exports.RequestOptions = function (url, method, body,xsrf) {
-  return RequestOptions(url, method, body,xsrf);
-}
+exports.createCsv = createCsv;
 
-function writeToFile(filePath,data){
-  var deferred = Q.defer();
-  fs.writeFile(filePath, data, function (err) {
-    if (err){
-      deferred.reject(err);
-      throw err;
-    }
-    else{
-      console.log('csv file saved');
-      deferred.resolve();
-    }
-
-  });
-  return deferred.promise;
-}
-
-exports.writeToFile = function (filePath,data) {
-  return writeToFile(filePath,data);
-}
+exports.RequestOptions = RequestOptions;
 
 var dome9connection = require('./services/dome9-connection.js');
 var cloudInstance = require('./services/instances.js');
 var cloudSecurityGroups = require('./services/cloudSecurityGroups.js');
+
 function selector(type,conf){
-  var deferred = Q.defer();
   dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey);
   cloudInstance = new cloudInstance(dome9connection);
   cloudSecurityGroups = new cloudSecurityGroups(dome9connection);
-
+  var deferredResult = null; 
   switch(type){
     case 'instances':
-      Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
-        .then(function (data) {
-
-          deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
-        }, function (err) {
-          console.error(err);
-          deferred.reject(err);
-        });
-      break;
-
     default:
-      Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
-        .then(function (data) {
-          deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
-        }, function (err) {
-          console.error(err);
-          deferred.reject(err);
-        });
+      deferredResult = generateInstancesReport();
       break;
   }
-
-  return deferred.promise;
+  return deferredResult.promise;
 }
 
-exports.selector = function (type,conf) {
-  return selector(type,conf);
+function generateInstancesReport(){
+  logger.debug("Generating Instances Report");
+  var deferred = Q.defer();
+  Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
+  .then(function (data) {
+    deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
+  }, function (err) {
+    console.error(err);
+    deferred.reject(err);
+  });
+  return deferred;
 }
+
+exports.selector = selector;

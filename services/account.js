@@ -5,9 +5,8 @@
  * Created by arik.blumin on 3/31/2016.
  */
 var Q = require("q");
-//var logger;
-var winston = require('winston');
-var logger = winston;
+var globals = require('./../globals');
+var logger = globals.logger;
 var accountId;
 var proxy = process.env.http_proxy ? process.env.http_proxy : undefined;
 var collectedCookies = {collectedCookies: []};

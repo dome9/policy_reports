@@ -4,7 +4,8 @@
 /**
  * Created by Moshi on 3/3/2016.
  */
-var logger = require('winston');
+var globals = require('./../globals');
+var logger = globals.logger;
 var utils = require('./../utils');
 var rp = require('request-promise');
 var Q = require('q');
@@ -24,54 +25,8 @@ function Dome9Connection(username, password, apiKey){
 Dome9Connection.prototype.login = function(){
   var self = this;
 
-  this.loginPromise = utils.doLogin(self.authenticationCookie, {}, logger, this.username, this.password).then(function () {
-    // logger.info('Authentication cookie', self.authenticationCookie);
-    //self.isLoggedIn = true;
-  }, function (error) {
-    throw 'Failed to login\n' + 'original massage: \n' + error;
-  }).then(function(){
-    var v2AppRequestOptions = {
-      url: "https://secure.dome9.com/api/app",
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      },
-      json: true,
-      resolveWithFullResponse: true
-    };
-
-    v2AppRequestOptions = utils.addCookies(v2AppRequestOptions, self.authenticationCookie, logger);
-
-    var gen1AccessLeaseHtmlRequestOptions = {
-      url: "https://secure.dome9.com/firewall",
-      method: 'GET'
-    };
-
-    gen1AccessLeaseHtmlRequestOptions = utils.addCookies(gen1AccessLeaseHtmlRequestOptions, self.authenticationCookie, logger);
-
-    return Q.spread([
-      rp(v2AppRequestOptions),
-      rp(gen1AccessLeaseHtmlRequestOptions)
-
-    ], function(v2App, gen1AccessLeasesHtml){
-      var re = /XSRF-TOKEN=(.*); path=\//;
-
-      var xsrfToken = _.find(v2App.headers['set-cookie'], function(item){
-        return re.test(item);
-      });
-
-      if(xsrfToken){
-        self.xsrfToken = re.exec(xsrfToken)[1];
-        //logger.info(self.xsrfToken);
-      }
-
-      var matches = /D9\.csrftoken = \$\('<input name="__RequestVerificationToken" type="hidden" value="(.*)" \/>/.exec(gen1AccessLeasesHtml);
-      self.requestVerificationToken = matches.length == 2 ? matches[1] : null;
-      // logger.info('csrf token: ' + self.requestVerificationToken);
-    })
-
-  });
-
+  this.loginPromise = utils.doLogin(self.authenticationCookie, {}, logger, this.username, this.password)
+  
   return this.loginPromise;
 };
 
