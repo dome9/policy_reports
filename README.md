@@ -22,7 +22,8 @@
 
 3. If running the tools without specifying (Dome9) username / password - the tool will prompt for them.
 
-You will find the csv file in the policyReport directory.
+An example run is:
+```node policyGenerator.js  -u me@acme.com -p mypass -f myreport.csv```
 
 ### Command Line options ###
 
