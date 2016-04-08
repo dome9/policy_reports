@@ -4,13 +4,15 @@
 ( Can be Download <a href="https://nodejs.org">here</a> )
 
 ## Installation ##
-1. Clone this repo into your local machine
+1 Clone this repo into your local machine
 
 ```git clone https://github.com/Dome9/policy_reports.git```
-2. Navigate to the policy reports folder:
+
+2 Navigate to the policy reports folder:
 
 ```cd policy_reports``` 
-3. Install the tool's dependencies:
+
+3 Install the tool's dependencies:
 
 ```npm install ```
 
@@ -22,12 +24,14 @@
 
 3. If running the tools without specifying (Dome9) username / password - the tool will prompt for them.
 
-An example run is:
-```node policyGenerator.js  -u me@acme.com -p mypass -f myreport.csv```
-
 ### Command Line options ###
 
-* -r <report type> or --report <report type> for choosing the report type. Currentlu the only supported report type is 'instances' (it is also th default) mode to come soon.
-* -f <PATH> or --file <PATH> for writing the report to file instead of to the standard output.
- 
+* -r or --report REPORT_TYPE for choosing the report type. Currentlu the only supported report type is 'instances' (it is also th default report).
+* -f <PATH> or --file PATH for writing the report to file instead of to the standard output.
+* -u or --username USERNAME : your Dome9 username (email)
+* -p or --password PASSWORD : your Dome9 password 
+
+
+An example of how to generate report to file:
+```node policyGenerator.js  -u me@acme.com -p mypass -f myreport.csv```
 
