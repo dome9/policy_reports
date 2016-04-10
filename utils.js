@@ -102,7 +102,7 @@ function doFirstRequest(collectedCookies, parameters, logger){
   return deferred.promise;
 }
 
-function doSecondRequest(collectedCookies, parameters, logger,username,password) {
+function doSecondRequest(collectedCookies, parameters, logger,username,password,mfa) {
   var deferred = Q.defer();
   var reqOpts = {
     url: "https://secure.dome9.com/account/logon",
@@ -116,7 +116,8 @@ function doSecondRequest(collectedCookies, parameters, logger,username,password)
   };
 
   reqOpts = addCookies(reqOpts,collectedCookies,logger);
-  reqOpts.body = 'UserName='+encodeURIComponent(username)+'&Password='+encodeURIComponent(password) ;
+  if(mfa) reqOpts.body ='UserName='+encodeURIComponent(username)+'&Password='+encodeURIComponent(password)+'&mfa=on&MfaToken='+mfa;
+  else reqOpts.body = 'UserName='+encodeURIComponent(username)+'&Password='+encodeURIComponent(password) ;
   request(reqOpts, function (err, res, body) {
     if (err) {
       logger.error('request on url %s error %s %s',reqOpts.method, reqOpts.url, JSON.stringify(err));
@@ -145,10 +146,10 @@ function doSecondRequest(collectedCookies, parameters, logger,username,password)
   return deferred.promise;
 }
 
-function doLogin(collectedCookies, parameters, logger,username,password) {
+function doLogin(collectedCookies, parameters, logger,username,password,mfa) {
   // doing logon
   return doFirstRequest(collectedCookies, parameters, logger).then( function(){
-    return doSecondRequest(collectedCookies, parameters, logger,username,password);
+    return doSecondRequest(collectedCookies, parameters, logger,username,password,mfa);
   });
 }
 
@@ -240,6 +241,10 @@ function getInputs(login){
       {
         name: 'password',
         hidden: true
+      },
+      {
+        name: 'mfa',
+        message: 'MFA (optional, default: with out MFA) '
       }
     ];
 
@@ -250,7 +255,8 @@ function getInputs(login){
       logger.debug('Command-line input received:');
       var conf={
         username:result.username,
-        password:result.password
+        password:result.password,
+        mfa:result.mfa
       }
       deferred.resolve(conf);
     });
@@ -368,7 +374,7 @@ var cloudInstance = require('./services/instances.js');
 var cloudSecurityGroups = require('./services/cloudSecurityGroups.js');
 
 function selector(type,conf){
-  dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey);
+  dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey,conf.mfa);
   cloudInstance = new cloudInstance(dome9connection);
   cloudSecurityGroups = new cloudSecurityGroups(dome9connection);
   var deferredResult = null; 

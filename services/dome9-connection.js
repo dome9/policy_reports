@@ -11,10 +11,11 @@ var rp = require('request-promise');
 var Q = require('q');
 var _ = require('lodash');
 
-function Dome9Connection(username, password, apiKey){
+function Dome9Connection(username, password, apiKey,mfa){
   this.username = username;
   this.password = password;
   this.apiKey = apiKey;
+  this.mfa=mfa;
   //this.isLoggedIn = false;
   this.loginPromise = null;
   this.authenticationCookie = [];
@@ -25,7 +26,7 @@ function Dome9Connection(username, password, apiKey){
 Dome9Connection.prototype.login = function(){
   var self = this;
 
-  this.loginPromise = utils.doLogin(self.authenticationCookie, {}, logger, this.username, this.password)
+  this.loginPromise = utils.doLogin(self.authenticationCookie, {}, logger, this.username, this.password,this.mfa);
   
   return this.loginPromise;
 };
