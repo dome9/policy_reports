@@ -29,7 +29,8 @@
 * -r or --report REPORT_TYPE for choosing the report type. Currentlu the only supported report type is 'instances' (it is also th default report).
 * -f <PATH> or --file PATH for writing the report to file instead of to the standard output.
 * -u or --username USERNAME : your Dome9 username (email)
-* -p or --password PASSWORD : your Dome9 password 
+* -p or --password PASSWORD : your Dome9 password
+* -m or --mfa MFA : For users with MFA. 
 
 
 An example of how to generate report to file:
