@@ -8,7 +8,8 @@ var globals = require('./globals');
 var logger = globals.logger;
 var login={
   username:'',
-  password:''
+  password:'',
+  mfa: undefined
 };
 var fields = ['externalId', 'name', 'region',
   'externalId', 'field2', 'field3',
@@ -19,6 +20,7 @@ program
     .option('-r, --report <report>', 'the report type to be generate. Currently supported: instances')
     .option('-u, --username <username>', 'Dome9 username')
     .option('-p, --password <password>', 'Dome9 password')
+    .option('-m, --mfa <mfa>', 'mfa')
 
   program.parse(process.argv);
 
@@ -26,6 +28,7 @@ var path = program.file;
 var type = program.type||'./instances';
 login.password= program.password;
 login.username= program.username;
+login.mfa= program.mfa;
 
 // Redirect all console log messages into the standard error. in order to use the standard out for the tools result.
 // Note - this is also implemented in the winston logging - but implemented here too since there are occurences of console.log in the code.
