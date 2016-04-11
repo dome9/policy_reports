@@ -17,7 +17,7 @@ var fields = ['externalId', 'name', 'region',
   'externalId', 'field2'];
 program
     .option('-f, --file <file>', 'the result file path, such as ./myDir/report/csv')
-    .option('-r, --report <report>', 'the report type to be generate. Currently supported: instances')
+    .option('-r, --report <report>', 'the report type to be generate. Currently supported: instances and securityGroups')
     .option('-u, --username <username>', 'Dome9 username')
     .option('-p, --password <password>', 'Dome9 password')
     .option('-m, --mfa <mfa>', 'mfa')
@@ -25,7 +25,7 @@ program
   program.parse(process.argv);
 
 var path = program.file;
-var type = program.type||'./instances';
+var type = program.report||'./instances';
 login.password= program.password;
 login.username= program.username;
 login.mfa= program.mfa;

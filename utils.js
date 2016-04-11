@@ -372,14 +372,21 @@ exports.RequestOptions = RequestOptions;
 var dome9connection = require('./services/dome9-connection.js');
 var cloudInstance = require('./services/instances.js');
 var cloudSecurityGroups = require('./services/cloudSecurityGroups.js');
+var cloudElb = require('./services/cloudLoadBalancer.js');
 
 function selector(type,conf){
   dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey,conf.mfa);
   cloudInstance = new cloudInstance(dome9connection);
   cloudSecurityGroups = new cloudSecurityGroups(dome9connection);
+  cloudElb = new cloudElb(dome9connection);
   var deferredResult = null; 
   switch(type){
     case 'instances':
+      deferredResult = generateInstancesReport();
+      break;
+    case 'securityGroups':
+      deferredResult = generateSecurityGroupsReport();
+      break;
     default:
       deferredResult = generateInstancesReport();
       break;
@@ -397,6 +404,19 @@ function generateInstancesReport(){
     console.error(err);
     deferred.reject(err);
   });
+  return deferred;
+}
+
+function generateSecurityGroupsReport(){
+  logger.debug("Generating Security Groups Report");
+  var deferred = Q.defer();
+  Q.all([cloudInstance.get(), cloudSecurityGroups.get(),cloudElb.get()])
+    .then(function (data) {
+      deferred.resolve(cloudSecurityGroups.logic({instances: data[0], securityGroups: data[1],elbs:data[2]}));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
   return deferred;
 }
 
