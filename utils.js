@@ -387,6 +387,9 @@ function selector(type,conf){
     case 'securityGroups':
       deferredResult = generateSecurityGroupsReport();
       break;
+    case 'elbs':
+      deferredResult = generateElbsReport();
+      break;
     default:
       deferredResult = generateInstancesReport();
       break;
@@ -413,6 +416,19 @@ function generateSecurityGroupsReport(){
   Q.all([cloudInstance.get(), cloudSecurityGroups.get(),cloudElb.get()])
     .then(function (data) {
       deferred.resolve(cloudSecurityGroups.logic({instances: data[0], securityGroups: data[1],elbs:data[2]}));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
+function generateElbsReport(){
+  logger.debug("Generating Load Balancer Report");
+  var deferred = Q.defer();
+  Q.all([cloudSecurityGroups.get(),cloudElb.get()])
+    .then(function (data) {
+      deferred.resolve(cloudElb.logic({securityGroups: data[0],elbs:data[1]}));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
