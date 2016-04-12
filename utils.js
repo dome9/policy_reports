@@ -406,11 +406,14 @@ function selector(type, conf) {
     case 'rds':
       deferredResult = generateRdsReport();
       break;
+    case 'subnet-nacl':
+      deferredResult = generateSubnetsNaclReport();
+      break;
     case 'nacl':
       deferredResult = generateNaclReport();
       break;
     default:
-      deferredResult = generateNaclReport();
+      deferredResult = generateInstancesReport();
       break;
   }
   return deferredResult.promise;
@@ -421,7 +424,9 @@ function generateInstancesReport() {
   var deferred = Q.defer();
   Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
     .then(function (data) {
-      deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
+      deferred.resolve(cloudInstance.logic({
+        instances: data[0],
+        securityGroups: data[1]}));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -434,7 +439,10 @@ function generateSecurityGroupsReport() {
   var deferred = Q.defer();
   Q.all([cloudInstance.get(), cloudSecurityGroups.get(), cloudElb.get()])
     .then(function (data) {
-      deferred.resolve(cloudSecurityGroups.logic({instances: data[0], securityGroups: data[1], elbs: data[2]}));
+      deferred.resolve(cloudSecurityGroups.logic({
+        instances: data[0],
+        securityGroups: data[1],
+        elbs: data[2]}));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -447,7 +455,9 @@ function generateElbsReport() {
   var deferred = Q.defer();
   Q.all([cloudSecurityGroups.get(), cloudElb.get()])
     .then(function (data) {
-      deferred.resolve(cloudElb.logic({securityGroups: data[0], elbs: data[1]}));
+      deferred.resolve(cloudElb.logic({
+        securityGroups: data[0],
+        elbs: data[1]}));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -460,7 +470,27 @@ function generateRdsReport() {
   var deferred = Q.defer();
   Q.all([cloudSecurityGroups.get(), cloudDbInstance.get()])
     .then(function (data) {
-      deferred.resolve(cloudDbInstance.logic({securityGroups: data[0], rds: data[1]}));
+      deferred.resolve(cloudDbInstance.logic({
+        securityGroups: data[0],
+        rds: data[1]}));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
+function generateSubnetsNaclReport() {
+  logger.debug("Generating Subnet NACL Policies Report");
+  var deferred = Q.defer();
+  Q.all([cloudNacl.get(), cloudAccount.getCloudAccount(), cloudSubnet.get(), cloudVpc.get()])
+    .then(function (data) {
+      deferred.resolve(cloudSubnet.logic({
+        nacls: data[0],
+        cloudaccounts: JSON.parse(data[1]),
+        subnets: data[2],
+        vpcsInfo: data[3]
+      }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -471,13 +501,12 @@ function generateRdsReport() {
 function generateNaclReport() {
   logger.debug("Generating NACL Policies Report");
   var deferred = Q.defer();
-  Q.all([cloudNacl.get(), cloudAccount.getCloudAccount(), cloudSubnet.get(), cloudVpc.get()])
+  Q.all([cloudNacl.get(), cloudAccount.getCloudAccount(), cloudVpc.get()])
     .then(function (data) {
       deferred.resolve(cloudNacl.logic({
         nacls: data[0],
-        cloudaccounts: data[1],
-        subnets: data[2],
-        vpcsInfo: data[3]
+        cloudaccounts: JSON.parse(data[1]),
+        vpcsInfo: data[2]
       }));
     }, function (err) {
       console.error(err);

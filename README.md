@@ -26,7 +26,7 @@
 
 ### Command Line options ###
 
-* -r or --report REPORT_TYPE for choosing the report type. Currently the supported reports type are 'instances', 'securityGroups', 'rds', 'nacl' and 'elbs' (instances is the default report).
+* -r or --report REPORT_TYPE for choosing the report type. Currently the supported reports type are 'instances', 'securityGroups', 'rds', 'nacl','subnet-nacl', and 'elbs' (instances is the default report).
 * -f <PATH> or --file PATH for writing the report to file instead of to the standard output.
 * -u or --username USERNAME : your Dome9 username (email)
 * -p or --password PASSWORD : your Dome9 password

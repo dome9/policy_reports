@@ -18,6 +18,7 @@ function logic(data) {
 
   var obj = {};
 
+
   obj.alldata = [];
   obj.groups = [];
   obj.loading = false;
@@ -29,8 +30,6 @@ function logic(data) {
                              cloudAccountId,
                              naclId,
                              isDefault,
-                             subnetId,
-                             subnetCIDR,
                              protocol,
                              ruleNumber,
                              ruleAction,
@@ -45,7 +44,6 @@ function logic(data) {
       '6': "TCP",
 
     };
-
     this.externalId = externalId;
     this.name = name;
     this.accountId = accountId;
@@ -54,7 +52,6 @@ function logic(data) {
     this.cloudAccountId = cloudAccountId;
     this.naclId = naclId;
     this.isDefault = isDefault;
-    this.subnetId = subnetId;
     this.protocol = protocolMap[protocol];
     this.ruleNumber = ruleNumber;
     this.ruleAction = ruleAction;
@@ -63,7 +60,6 @@ function logic(data) {
     } else if (egress === false) {
       this.egress = "Outbound";
     }
-    this.subnetCIDR = subnetCIDR;
     this.cidrBlock = cidrBlock;
     if (portRange !== undefined && portRange !== null) {
       this.portRange = portRange.from.toString() + '-' + portRange.to.toString();
@@ -74,7 +70,7 @@ function logic(data) {
     this.atomic_rule_id = this.naclId;
 
     if (protocol !== undefined) {
-      this.atomic_rule_id = this.atomic_rule_id + protocol.toString() + '-';
+      this.atomic_rule_id = this.atomic_rule_id + this.protocol.toString() + '-';
     }
     if (portRange !== undefined && portRange !== null) {
       this.atomic_rule_id = this.atomic_rule_id + portRange.from.toString() + '-' + portRange.to.toString() + '-';
@@ -92,82 +88,71 @@ function logic(data) {
     obj.alldata = [];
     obj.listOfValues = {};
 
-
     obj.cloudaccountsMap = {};
     _.each(data.cloudaccounts, function (cloud) {
       var key = "Guid_" + cloud.id;
       obj.cloudaccountsMap[key] = {name: cloud.name};
     });
 
-
-    obj.subnetsMap = {};
-    _.each(data.subnets, function (subnet) {
-      obj.subnetsMap[subnet.subnetId] = {name: subnet.name, subnetCIDR: subnet.cidrBlock};
-    });
-
     obj.vpcsInfoMap = {};
     _.each(data.vpcsInfo, function (vpcinfo) {
-      obj.vpcsInfoMap[vpcinfo.vpcId] = {name: vpcinfo.name};
+      obj.vpcsInfoMap[vpcinfo.externalId] = {name: vpcinfo.name};
     });
 
     // Transform the data from standard SG representation into a list of AtomicRule
     if (data.nacls) {
       _.each(data.nacls, function (nacl) {
         _.each(nacl.entries, function (entry) {
-          _.each(nacl.associations, function (association) {
-            var vpcname = "";
-            if (obj.vpcsInfoMap[nacl.vpcId] && obj.vpcsInfoMap[nacl.vpcId].name !== "") {
-              vpcname = obj.vpcsInfoMap[nacl.vpcId].name + " (" + nacl.vpcId + ")";
-            } else {
-              vpcname = nacl.vpcId;
-            }
+          var vpcname = "";
+          if (obj.vpcsInfoMap[nacl.vpcId] && obj.vpcsInfoMap[nacl.vpcId].name !== "") {
+            vpcname = obj.vpcsInfoMap[nacl.vpcId].name + " (" + nacl.vpcId + ")";
+          } else {
+            vpcname = nacl.vpcId;
+          }
 
-            var cloudAccountName = "";
-            var key = "Guid_" + nacl.cloudAccountId;
-            if (obj.cloudaccountsMap[key] && obj.cloudaccountsMap[key].name !== "") {
-              cloudAccountName = obj.cloudaccountsMap[key].name;
-            } else {
-              cloudAccountName = nacl.cloudAccountId;
-            }
+          var cloudAccountName = "";
+          var key = "Guid_" + nacl.cloudAccountId;
+          if (obj.cloudaccountsMap[key] && obj.cloudaccountsMap[key].name !== "") {
+            cloudAccountName = obj.cloudaccountsMap[key].name;
+          } else {
+            cloudAccountName = nacl.cloudAccountId;
+          }
 
-            var ruleToAdd = new AtomicRule(nacl.externalId,
-              nacl.name,
-              nacl.accountId,
-              vpcname,
-              nacl.region,
-              cloudAccountName,
-              nacl.naclId,
-              nacl.isDefault,
-              obj.subnetsMap[association.subnetId].name,
-              obj.subnetsMap[association.subnetId].subnetCIDR,
-              entry.protocol,
-              entry.ruleNumber,
-              entry.ruleAction,
-              entry.egress,
-              entry.cidrBlock,
-              entry.portRange,
-              entry.icmpTypeCode,
-              nacl.tags);
-            obj.alldata.push(ruleToAdd);
-          });
+          var ruleToAdd = new AtomicRule(nacl.externalId,
+            nacl.name,
+            nacl.accountId,
+            vpcname,
+            nacl.region,
+            cloudAccountName,
+            nacl.naclId,
+            nacl.isDefault,
+            entry.protocol,
+            entry.ruleNumber,
+            entry.ruleAction,
+            entry.egress,
+            entry.cidrBlock,
+            entry.portRange,
+            entry.icmpTypeCode,
+            nacl.tags);
+          obj.alldata.push(ruleToAdd);
         });
       });
     }
 
     obj.loading = false;
+
+
   };
 
   obj.fieldsToAutoCompleate = [
     "vpcId",
     "region",
     "cloudAccountId",
-    "subnetId",
     "protocol",
     "ruleAction",
     "egress",
     "cidrBlock",
     "portRange",
-    "subnetCIDR"
   ];
 
   obj.runReport();
@@ -199,7 +184,7 @@ function CloudNacl(dome9Connection) {
 
 CloudNacl.prototype = {
   get: get,
-  logic:logic
+  logic: logic
 };
 
 module.exports = function (dome9Connection) {
