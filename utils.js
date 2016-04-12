@@ -303,7 +303,7 @@ function createCsvRec(data, mode, path) {
       counter += 100;
       dataToWrite.forEach(function (el) {
         for (var prop in el) {
-          if (!el[prop] || el[prop] == null) el[prop] = '';
+          if ((!el[prop] || el[prop] == null)&&typeof el[prop]!="number") el[prop] = '';
           if (typeof(el[prop]) == "object") {
             woComma = commaHandler(JSON.stringify(el[prop]));
             wstream.write(woComma + ',');
@@ -348,7 +348,7 @@ function createCsvRec(data, mode, path) {
   return deferred.promise;
 }
 function commaHandler(obj) {
-  if (typeof obj != 'number' && typeof obj != 'undefined'&& typeof obj != 'boolean') {
+  if (typeof obj != 'number' && typeof obj != 'undefined' && typeof obj != 'boolean') {
     if (obj.indexOf(',') != -1) {
       var newObg = '';
       var arr = obj.split(',');
@@ -380,6 +380,8 @@ var cloudNacl = require('./services/cloudNacl.js');
 var cloudAccount = require('./services/account.js');
 var cloudSubnet = require('./services/cloudSubnet.js');
 var cloudVpc = require('./services/cloudvpc.js');
+var agentSecurityGroups = require('./services/securitygroup.js');
+var agent = require('./services/agent.js');
 
 function selector(type, conf) {
   dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey, conf.mfa);
@@ -391,6 +393,8 @@ function selector(type, conf) {
   cloudAccount = new cloudAccount.Account(dome9connection);
   cloudSubnet = new cloudSubnet(dome9connection);
   cloudVpc = new cloudVpc(dome9connection);
+  agentSecurityGroups = new agentSecurityGroups(dome9connection);
+  agent = new agent(dome9connection);
 
   var deferredResult = null;
   switch (type) {
@@ -412,6 +416,12 @@ function selector(type, conf) {
     case 'nacl':
       deferredResult = generateNaclReport();
       break;
+    case 'agent-securityGroups':
+      deferredResult = generateAgentSecurityGroupsReport();
+      break;
+    case 'hostBase':
+      deferredResult = generateHostBasePoliciesReport();
+      break;
     default:
       deferredResult = generateInstancesReport();
       break;
@@ -426,7 +436,8 @@ function generateInstancesReport() {
     .then(function (data) {
       deferred.resolve(cloudInstance.logic({
         instances: data[0],
-        securityGroups: data[1]}));
+        securityGroups: data[1]
+      }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -442,7 +453,8 @@ function generateSecurityGroupsReport() {
       deferred.resolve(cloudSecurityGroups.logic({
         instances: data[0],
         securityGroups: data[1],
-        elbs: data[2]}));
+        elbs: data[2]
+      }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -457,7 +469,8 @@ function generateElbsReport() {
     .then(function (data) {
       deferred.resolve(cloudElb.logic({
         securityGroups: data[0],
-        elbs: data[1]}));
+        elbs: data[1]
+      }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -472,7 +485,8 @@ function generateRdsReport() {
     .then(function (data) {
       deferred.resolve(cloudDbInstance.logic({
         securityGroups: data[0],
-        rds: data[1]}));
+        rds: data[1]
+      }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -514,5 +528,38 @@ function generateNaclReport() {
     });
   return deferred;
 }
+
+function generateAgentSecurityGroupsReport() {
+  logger.debug("Generating Agent Security Groups Policies Report");
+  var deferred = Q.defer();
+  Q.all([agentSecurityGroups.get(), agent.get()])
+    .then(function (data) {
+      deferred.resolve(agentSecurityGroups.logic({
+        sgs: data[0],
+        instances: data[1]
+      }));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
+function generateHostBasePoliciesReport() {
+  logger.debug("Generating Host Base Policies Policies Report");
+  var deferred = Q.defer();
+  Q.all([agentSecurityGroups.get(), agent.get()])
+    .then(function (data) {
+      deferred.resolve(agent.logic({
+        sgs: data[0],
+        instances: data[1]
+      }));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
 
 exports.selector = selector;
