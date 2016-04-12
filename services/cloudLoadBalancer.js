@@ -16,6 +16,55 @@ function logic(data) {
   obj.alldata = [];
   obj.groups = [];
   obj.loading = false;
+  var SGRule = function (account, account_id, regionId, vpc, sgName, sgId, sgExternalId, protocol, port, scope, direction, tags) {
+    this.account = account;
+    this.account_id = account_id;
+    this.regionId = regionId;
+    this.region = D9.Constants.RegionName[this.regionId];
+    this.vpc = vpc;
+    this.sgName = sgName;
+    this.sgId = sgId;
+    this.xId = sgExternalId;
+    this.protocol = protocol;
+    this.port = (protocol === 'ICMP' && port === 256) ? 'All' : port;
+    this.direction = direction;
+    this.tags = tags;
+    this.type = scope.type;
+
+    switch (scope.type) {
+      case "AWS":
+        this.source = scope.data.extid;
+        this.scopeDescription = scope.data.name;
+        break;
+      case "CIDR":
+        this.source = scope.data.cidr;
+        this.scopeDescription = scope.data.note;
+        break;
+      case "IPList":
+      case "MagicIP":
+        this.source = scope.data.name;
+        this.scopeDescription = "";
+        break;
+
+    }
+
+    this.atomic_rule_id = '';
+
+    if (sgId !== undefined) {
+      this.atomic_rule_id = this.atomic_rule_id + sgId.toString() + '-';
+    }
+    if (protocol !== undefined) {
+      this.atomic_rule_id = this.atomic_rule_id + protocol.toString() + '-';
+    }
+    if (port !== undefined) {
+      this.atomic_rule_id = this.atomic_rule_id + port.toString() + '-';
+    }
+    if (this.source !== undefined) {
+      this.atomic_rule_id = this.atomic_rule_id + this.source.toString() + '-';
+    }
+
+  };
+
   var AtomicRule = function (SGRule,
                              elbId,
                              name,
@@ -66,54 +115,6 @@ function logic(data) {
     }
   };
 
-  var SGRule = function (account, account_id, regionId, vpc, sgName, sgId, sgExternalId, protocol, port, scope, direction, tags) {
-    this.account = account;
-    this.account_id = account_id;
-    this.regionId = regionId;
-    this.region = D9.Constants.RegionName[this.regionId];
-    this.vpc = vpc;
-    this.sgName = sgName;
-    this.sgId = sgId;
-    this.xId = sgExternalId;
-    this.protocol = protocol;
-    this.port = (protocol === 'ICMP' && port === 256) ? 'All' : port;
-    this.direction = direction;
-    this.tags = tags;
-    this.type = scope.type;
-
-    switch (scope.type) {
-      case "AWS":
-        this.source = scope.data.extid;
-        this.scopeDescription = scope.data.name;
-        break;
-      case "CIDR":
-        this.source = scope.data.cidr;
-        this.scopeDescription = scope.data.note;
-        break;
-      case "IPList":
-      case "MagicIP":
-        this.source = scope.data.name;
-        this.scopeDescription = "";
-        break;
-
-    }
-
-    this.atomic_rule_id = '';
-
-    if (sgId !== undefined) {
-      this.atomic_rule_id = this.atomic_rule_id + sgId.toString() + '-';
-    }
-    if (protocol !== undefined) {
-      this.atomic_rule_id = this.atomic_rule_id + protocol.toString() + '-';
-    }
-    if (port !== undefined) {
-      this.atomic_rule_id = this.atomic_rule_id + port.toString() + '-';
-    }
-    if (this.source !== undefined) {
-      this.atomic_rule_id = this.atomic_rule_id + this.source.toString() + '-';
-    }
-
-  };
 
 
   obj.runReport = function () {

@@ -6,7 +6,7 @@ var _ = require('lodash');
 var collectedCookies, parameters, logger;
 var proxy = process.env.http_proxy ? process.env.http_proxy : undefined;
 var globals = require('./globals.js');
-var dome9ReqList=[];
+var dome9ReqList = [];
 var prompt = require('prompt');
 var fs = require('fs');
 var async = require('async');
@@ -37,11 +37,11 @@ function addCookie(collectedCookies, cookie) {
   }
 }
 
-exports.addCookie = function(collectedCookies, cookie) {
+exports.addCookie = function (collectedCookies, cookie) {
   return addCookie(collectedCookies, cookie);
 }
 
-function addCookies(reqOpts,collectedCookies,logger) {
+function addCookies(reqOpts, collectedCookies, logger) {
   for (var cookieIdx = 0; cookieIdx < collectedCookies.length; cookieIdx++) {
     var cookieDomain = cookieParser.parse(collectedCookies[cookieIdx][0]).Domain;
     if ((undefined === cookieDomain) || (("" === cookieDomain)) || (reqOpts.url.indexOf(cookieDomain) >= 0)) {
@@ -55,11 +55,11 @@ function addCookies(reqOpts,collectedCookies,logger) {
   return reqOpts;
 }
 
-exports.addCookies= function (reqOpts,collectedCookies,logger) {
-  return addCookies(reqOpts,collectedCookies,logger);
+exports.addCookies = function (reqOpts, collectedCookies, logger) {
+  return addCookies(reqOpts, collectedCookies, logger);
 }
 
-function doFirstRequest(collectedCookies, parameters, logger){
+function doFirstRequest(collectedCookies, parameters, logger) {
   var deferred = Q.defer();
 
   var reqOpts = {
@@ -73,14 +73,14 @@ function doFirstRequest(collectedCookies, parameters, logger){
 
   request(reqOpts, function (err, res, body) {
     if (err) {
-      logger.error('request on url %s error %s %s',reqOpts.method, reqOpts.url, JSON.stringify(err));
+      logger.error('request on url %s error %s %s', reqOpts.method, reqOpts.url, JSON.stringify(err));
       deferred.reject(err);
     }
     else if (undefined !== res) {
-      logger.debug('Processing request for tokens in Cookies...%s %s',reqOpts.method, reqOpts.url);
+      logger.debug('Processing request for tokens in Cookies...%s %s', reqOpts.method, reqOpts.url);
 
       if ((res.statusCode === 304) || (res.statusCode === 302) || (res.statusCode === 200)) {
-        logger.debug('status Response ok:',res.statusCode);
+        logger.debug('status Response ok:', res.statusCode);
       }
       else {
         logger.error('status Response is NOT ok - ', res.statusCode);
@@ -102,7 +102,7 @@ function doFirstRequest(collectedCookies, parameters, logger){
   return deferred.promise;
 }
 
-function doSecondRequest(collectedCookies, parameters, logger,username,password,mfa) {
+function doSecondRequest(collectedCookies, parameters, logger, username, password, mfa) {
   var deferred = Q.defer();
   var reqOpts = {
     url: "https://secure.dome9.com/account/logon",
@@ -111,23 +111,23 @@ function doSecondRequest(collectedCookies, parameters, logger,username,password,
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
       'Content-Type': "application/x-www-form-urlencoded",
-      'Referer':"https://secure.dome9.com/account/logon"
+      'Referer': "https://secure.dome9.com/account/logon"
     }
   };
 
-  reqOpts = addCookies(reqOpts,collectedCookies,logger);
-  if(mfa) reqOpts.body ='UserName='+encodeURIComponent(username)+'&Password='+encodeURIComponent(password)+'&mfa=on&MfaToken='+mfa;
-  else reqOpts.body = 'UserName='+encodeURIComponent(username)+'&Password='+encodeURIComponent(password) ;
+  reqOpts = addCookies(reqOpts, collectedCookies, logger);
+  if (mfa) reqOpts.body = 'UserName=' + encodeURIComponent(username) + '&Password=' + encodeURIComponent(password) + '&mfa=on&MfaToken=' + mfa;
+  else reqOpts.body = 'UserName=' + encodeURIComponent(username) + '&Password=' + encodeURIComponent(password);
   request(reqOpts, function (err, res, body) {
     if (err) {
-      logger.error('request on url %s error %s %s',reqOpts.method, reqOpts.url, JSON.stringify(err));
+      logger.error('request on url %s error %s %s', reqOpts.method, reqOpts.url, JSON.stringify(err));
       deferred.reject(err);
     }
     else if (undefined !== res) {
-      logger.info('Processing request for tokens in Cookies...%s %s',reqOpts.method, reqOpts.url);
+      logger.info('Processing request for tokens in Cookies...%s %s', reqOpts.method, reqOpts.url);
 
       if ((res.statusCode === 304) || (res.statusCode === 302) || (res.statusCode === 200)) {
-        logger.info('status Response ok:',res.statusCode);
+        logger.info('status Response ok:', res.statusCode);
       }
       else {
         logger.error('status Response is NOT ok - ', res.statusCode);
@@ -146,15 +146,15 @@ function doSecondRequest(collectedCookies, parameters, logger,username,password,
   return deferred.promise;
 }
 
-function doLogin(collectedCookies, parameters, logger,username,password,mfa) {
+function doLogin(collectedCookies, parameters, logger, username, password, mfa) {
   // doing logon
-  return doFirstRequest(collectedCookies, parameters, logger).then( function(){
-    return doSecondRequest(collectedCookies, parameters, logger,username,password,mfa);
+  return doFirstRequest(collectedCookies, parameters, logger).then(function () {
+    return doSecondRequest(collectedCookies, parameters, logger, username, password, mfa);
   });
 }
 
 
-function reqManager(requestOptionsIn){
+function reqManager(requestOptionsIn) {
   var deferred = Q.defer();
   dome9ReqList.push(requestOptionsIn);
   reqExecuter
@@ -162,7 +162,7 @@ function reqManager(requestOptionsIn){
 }
 exports.doLogin = doLogin;
 
-function basicRequestProcess(err,res,body,collectedCookies, parameters, logger,reqOpts) {
+function basicRequestProcess(err, res, body, collectedCookies, parameters, logger, reqOpts) {
 
   if (err) {
     logger.error('request on url %s error %s %s', reqOpts.method, reqOpts.url, JSON.stringify(err));
@@ -197,18 +197,18 @@ function basicRequestProcess(err,res,body,collectedCookies, parameters, logger,r
  */
 
 
-exports.basicRequestProcess = function (err,res,body,collectedCookies, parameters, logger,reqOpts) {
-  return basicRequestProcess(err,res,body,collectedCookies, parameters, logger,reqOpts);
+exports.basicRequestProcess = function (err, res, body, collectedCookies, parameters, logger, reqOpts) {
+  return basicRequestProcess(err, res, body, collectedCookies, parameters, logger, reqOpts);
 }
 
-exports.loadFile = function(fileName) {
+exports.loadFile = function (fileName) {
   var fs = require('fs');
   var file = __dirname + '/' + fileName;
   var newdata = fs.readFileSync(file, 'utf8');
   return newdata;
 }
 
-function RequestOptions(url, method, body,xsrf) {
+function RequestOptions(url, method, body, xsrf) {
   this.reqOpts = {
     //url: 'https://' + utils.getConfiguration().username + ':' + utils.getConfiguration().APIKey +
     //'@'+  utils.getConfiguration().baseAPIUrl + 'titan-leases/f7b335e1-82bf-4166-a94e-8f8eb4a4e6c8?format=json;',
@@ -226,12 +226,12 @@ function RequestOptions(url, method, body,xsrf) {
 
 exports.getInputs = getInputs;
 
-function getInputs(login){
+function getInputs(login) {
   var deferred = Q.defer();
-  if(login.password&&login.username) {
+  if (login.password && login.username) {
     deferred.resolve(login);
   }
-  else{
+  else {
     var properties = [
       {
         name: 'username',
@@ -251,12 +251,14 @@ function getInputs(login){
     prompt.start();
 
     prompt.get(properties, function (err, result) {
-      if (err) { return onErr(err); }
+      if (err) {
+        return onErr(err);
+      }
       logger.debug('Command-line input received:');
-      var conf={
-        username:result.username,
-        password:result.password,
-        mfa:result.mfa
+      var conf = {
+        username: result.username,
+        password: result.password,
+        mfa: result.mfa
       }
       deferred.resolve(conf);
     });
@@ -268,76 +270,76 @@ function getInputs(login){
   }
   return deferred.promise;
 }
-var generalCounter =0;
+var generalCounter = 0;
 
-function createCsv(data,path){
+function createCsv(data, path) {
   logger.info('Creating the report. Writing to: ' + (path ? path : 'standard output'));
-  return createCsvRec(data,undefined, path);
+  return createCsvRec(data, undefined, path);
 }
 
-function createCsvRec(data,mode,path){
+function createCsvRec(data, mode, path) {
   var MAX_ITERATIONS_PER_BATCH = 80000;
   logger.debug("Writing batch");
-  
+
   var woComma;
   var deferred = Q.defer();
-  var counter=0;
-  var wstream = path? fs.createWriteStream(path,{flags: mode}): process.stdout;
-  
+  var counter = 0;
+  var wstream = path ? fs.createWriteStream(path, {flags: mode}) : process.stdout;
+
   async.whilst(function () {
-      return 0 < data.length && counter< MAX_ITERATIONS_PER_BATCH ;
+      return 0 < data.length && counter < MAX_ITERATIONS_PER_BATCH;
     },
     function (next) {
-      if(counter==0&&generalCounter==0){
+      if (counter == 0 && generalCounter == 0) {
         generalCounter++;
-        var headers='';
-        for(var prop in data[0]){
-          headers+=prop+',';
+        var headers = '';
+        for (var prop in data[0]) {
+          headers += prop + ',';
         }
-        wstream.write(headers+'\n');
+        wstream.write(headers + '\n');
       }
-      
-      var dataToWrite=data.splice(0,100);
-      counter+=100;
-      dataToWrite.forEach(function(el){
-          for(var prop in el){
-            if(!el[prop]||el[prop]==null) el[prop]='';
-            if(typeof(el[prop])=="object") {
-                woComma=commaHandler(JSON.stringify(el[prop]));
-                wstream.write(woComma+',');
-            }
-            else {
-                woComma=commaHandler(el[prop]);
-                wstream.write(woComma+',');
-            }
+
+      var dataToWrite = data.splice(0, 100);
+      counter += 100;
+      dataToWrite.forEach(function (el) {
+        for (var prop in el) {
+          if (!el[prop] || el[prop] == null) el[prop] = '';
+          if (typeof(el[prop]) == "object") {
+            woComma = commaHandler(JSON.stringify(el[prop]));
+            wstream.write(woComma + ',');
           }
-          wstream.write('\n');
+          else {
+            woComma = commaHandler(el[prop]);
+            wstream.write(woComma + ',');
+          }
+        }
+        wstream.write('\n');
       });
       next();
-      
+
     },
-    function done (err) {
-      if(0 < data.length && counter>= MAX_ITERATIONS_PER_BATCH){
+    function done(err) {
+      if (0 < data.length && counter >= MAX_ITERATIONS_PER_BATCH) {
         // We need to run another batch
-        if(!path){
+        if (!path) {
           // writing to standard output - no need to stop the stream
-          createCsvRec(data,'a',path)
-          .then(deferred.resolve);
+          createCsvRec(data, 'a', path)
+            .then(deferred.resolve);
         }
-        else{
-          wstream.end(function(){
-            createCsvRec(data,'a',path)
-            .then( deferred.resolve);
+        else {
+          wstream.end(function () {
+            createCsvRec(data, 'a', path)
+              .then(deferred.resolve);
           });
         }
       }
-      else{ 
+      else {
         // We are done. No more batches
-        if(!path){
+        if (!path) {
           // writing to standard output - no need to stop the stream
           deferred.resolve();
         }
-        else{
+        else {
           wstream.end(deferred.resolve);
         }
       }
@@ -345,17 +347,17 @@ function createCsvRec(data,mode,path){
 
   return deferred.promise;
 }
-function commaHandler(obj){
-  if(typeof obj!= 'number'&&typeof obj!='undefined'){
-    if (obj.indexOf(',')!=-1){
-      var newObg='';
-      var arr=obj.split(',');
-      arr.forEach(function(el){
-        newObg+=' '+el+' ';
+function commaHandler(obj) {
+  if (typeof obj != 'number' && typeof obj != 'undefined'&& typeof obj != 'boolean') {
+    if (obj.indexOf(',') != -1) {
+      var newObg = '';
+      var arr = obj.split(',');
+      arr.forEach(function (el) {
+        newObg += ' ' + el + ' ';
       });
       return newObg;
     }
-    else{
+    else {
       return obj;
     }
   }
@@ -373,14 +375,25 @@ var dome9connection = require('./services/dome9-connection.js');
 var cloudInstance = require('./services/instances.js');
 var cloudSecurityGroups = require('./services/cloudSecurityGroups.js');
 var cloudElb = require('./services/cloudLoadBalancer.js');
+var cloudDbInstance = require('./services/clouddbInstance.js');
+var cloudNacl = require('./services/cloudNacl.js');
+var cloudAccount = require('./services/account.js');
+var cloudSubnet = require('./services/cloudSubnet.js');
+var cloudVpc = require('./services/cloudvpc.js');
 
-function selector(type,conf){
-  dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey,conf.mfa);
+function selector(type, conf) {
+  dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey, conf.mfa);
   cloudInstance = new cloudInstance(dome9connection);
   cloudSecurityGroups = new cloudSecurityGroups(dome9connection);
   cloudElb = new cloudElb(dome9connection);
-  var deferredResult = null; 
-  switch(type){
+  cloudDbInstance = new cloudDbInstance(dome9connection);
+  cloudNacl = new cloudNacl(dome9connection);
+  cloudAccount = new cloudAccount.Account(dome9connection);
+  cloudSubnet = new cloudSubnet(dome9connection);
+  cloudVpc = new cloudVpc(dome9connection);
+
+  var deferredResult = null;
+  switch (type) {
     case 'instances':
       deferredResult = generateInstancesReport();
       break;
@@ -390,32 +403,25 @@ function selector(type,conf){
     case 'elbs':
       deferredResult = generateElbsReport();
       break;
+    case 'rds':
+      deferredResult = generateRdsReport();
+      break;
+    case 'nacl':
+      deferredResult = generateNaclReport();
+      break;
     default:
-      deferredResult = generateInstancesReport();
+      deferredResult = generateNaclReport();
       break;
   }
   return deferredResult.promise;
 }
 
-function generateInstancesReport(){
+function generateInstancesReport() {
   logger.debug("Generating Instances Report");
   var deferred = Q.defer();
   Q.all([cloudInstance.get(), cloudSecurityGroups.get()])
-  .then(function (data) {
-    deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
-  }, function (err) {
-    console.error(err);
-    deferred.reject(err);
-  });
-  return deferred;
-}
-
-function generateSecurityGroupsReport(){
-  logger.debug("Generating Security Groups Report");
-  var deferred = Q.defer();
-  Q.all([cloudInstance.get(), cloudSecurityGroups.get(),cloudElb.get()])
     .then(function (data) {
-      deferred.resolve(cloudSecurityGroups.logic({instances: data[0], securityGroups: data[1],elbs:data[2]}));
+      deferred.resolve(cloudInstance.logic({instances: data[0], securityGroups: data[1]}));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
@@ -423,12 +429,56 @@ function generateSecurityGroupsReport(){
   return deferred;
 }
 
-function generateElbsReport(){
+function generateSecurityGroupsReport() {
+  logger.debug("Generating Security Groups Report");
+  var deferred = Q.defer();
+  Q.all([cloudInstance.get(), cloudSecurityGroups.get(), cloudElb.get()])
+    .then(function (data) {
+      deferred.resolve(cloudSecurityGroups.logic({instances: data[0], securityGroups: data[1], elbs: data[2]}));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
+function generateElbsReport() {
   logger.debug("Generating Load Balancer Report");
   var deferred = Q.defer();
-  Q.all([cloudSecurityGroups.get(),cloudElb.get()])
+  Q.all([cloudSecurityGroups.get(), cloudElb.get()])
     .then(function (data) {
-      deferred.resolve(cloudElb.logic({securityGroups: data[0],elbs:data[1]}));
+      deferred.resolve(cloudElb.logic({securityGroups: data[0], elbs: data[1]}));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
+function generateRdsReport() {
+  logger.debug("Generating RDS Report");
+  var deferred = Q.defer();
+  Q.all([cloudSecurityGroups.get(), cloudDbInstance.get()])
+    .then(function (data) {
+      deferred.resolve(cloudDbInstance.logic({securityGroups: data[0], rds: data[1]}));
+    }, function (err) {
+      console.error(err);
+      deferred.reject(err);
+    });
+  return deferred;
+}
+
+function generateNaclReport() {
+  logger.debug("Generating NACL Policies Report");
+  var deferred = Q.defer();
+  Q.all([cloudNacl.get(), cloudAccount.getCloudAccount(), cloudSubnet.get(), cloudVpc.get()])
+    .then(function (data) {
+      deferred.resolve(cloudNacl.logic({
+        nacls: data[0],
+        cloudaccounts: data[1],
+        subnets: data[2],
+        vpcsInfo: data[3]
+      }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
