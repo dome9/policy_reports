@@ -1,7 +1,4 @@
 /**
- * Created by arik.blumin on 4/6/2016.
- */
-/**
  * Created by Moshi on 12/25/2014.
  */
 var D9 = D9 || {};
@@ -31,22 +28,22 @@ D9.Constants.IamSafe.iamState = {
   Attached: {
     name: "Attached",
     displayName: "Protected",
-    iconClass:'fa fa-diamond color-success'
+    iconClass: 'fa fa-diamond color-success'
   },
   Restricted: {
     name: "Restricted",
     displayName: "Restricted",
-    iconClass:'fa fa-lock color-seaweed'
+    iconClass: 'fa fa-lock color-seaweed'
   },
   Excluded: {
     name: "Excluded",
     displayName: "Not Protected",
-    iconClass:''
+    iconClass: ''
   },
   Unattached: {
     name: "Unattached",
     displayName: "Not Protected",
-    iconClass:'fa fa-unlock color-D9-alerted'
+    iconClass: 'fa fa-unlock color-D9-alerted'
   }
 };
 
@@ -380,7 +377,6 @@ D9.Constants.magicIps = [
     description: "Dome9 servers"
   }
 ];
-
 
 
 /**
@@ -2798,6 +2794,6 @@ D9.Constants.AwsServiceToCategory = {
   "Zocalo": ""
 };
 
-module.exports ={
-  D9:D9
+module.exports = {
+  D9: D9
 };

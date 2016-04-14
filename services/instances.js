@@ -10,7 +10,7 @@ var _ = require('lodash');
 var constants = require('./../constants.js');
 var D9 = constants.D9;
 
-function logic(data){
+function logic(data) {
   var AtomicRule = function (SGRule,
                              instanceId,
                              name,
@@ -129,7 +129,7 @@ function logic(data){
     }
 
   };
-  var obj={};
+  var obj = {};
   // need to do some magic....
   obj['sgalldata'] = _.flattenDeep(_.map(data.securityGroups, function (sg) {
     var inboundRules = _.map(sg.services.inbound, function (service) {
@@ -206,9 +206,9 @@ function logic(data){
 }
 
 
-function get(id){
+function get(id) {
   var url = "https://secure.dome9.com/api/CloudInstance";
-  if(id){
+  if (id) {
     url += '/' + id;
   }
   var requestOptions = {
@@ -220,20 +220,20 @@ function get(id){
     json: true
   };
 
-  return Q(this.connection.requestV2WebApi(requestOptions)).fail(function(reason){
+  return Q(this.connection.requestV2WebApi(requestOptions)).fail(function (reason) {
     throw 'cannot perform dome9/cloudInstance.get, reason:' + JSON.stringify(reason);
   });
 }
 
-function CloudInstance(dome9Connection){
+function CloudInstance(dome9Connection) {
   this.connection = dome9Connection;
 }
 
 CloudInstance.prototype = {
   get: get,
-  logic:logic
+  logic: logic
 };
 
-module.exports = function(dome9Connection){
+module.exports = function (dome9Connection) {
   return new CloudInstance(dome9Connection);
 };

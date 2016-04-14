@@ -8,9 +8,9 @@ var globals = require('./../globals');
 var logger = globals.logger;
 var _ = require('lodash');
 
-function get(id){
+function get(id) {
   var url = "https://secure.dome9.com/api/CloudVpc";
-  if(id){
+  if (id) {
     url += '/' + id;
   }
   var requestOptions = {
@@ -22,12 +22,12 @@ function get(id){
     json: true
   };
 
-  return Q(this.connection.requestV2WebApi(requestOptions)).fail(function(reason){
+  return Q(this.connection.requestV2WebApi(requestOptions)).fail(function (reason) {
     throw 'cannot perform dome9/CloudVpc.get, reason:' + JSON.stringify(reason);
   });
 }
 
-function CloudVpc(dome9Connection){
+function CloudVpc(dome9Connection) {
   this.connection = dome9Connection;
 }
 
@@ -35,7 +35,7 @@ CloudVpc.prototype = {
   get: get
 };
 
-module.exports = function(dome9Connection){
+module.exports = function (dome9Connection) {
   return new CloudVpc(dome9Connection);
 };
 

@@ -204,7 +204,7 @@ function Agent(dome9Connection) {
 
 Agent.prototype = {
   get: get,
-  logic:logic
+  logic: logic
 };
 
 module.exports = function (dome9Connection) {

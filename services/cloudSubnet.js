@@ -171,9 +171,9 @@ function logic(data) {
   return obj.alldata;
 }
 
-function get(id){
+function get(id) {
   var url = "https://secure.dome9.com/api/CloudSubnet";
-  if(id){
+  if (id) {
     url += '/' + id;
   }
   var requestOptions = {
@@ -185,21 +185,21 @@ function get(id){
     json: true
   };
 
-  return Q(this.connection.requestV2WebApi(requestOptions)).fail(function(reason){
+  return Q(this.connection.requestV2WebApi(requestOptions)).fail(function (reason) {
     throw 'cannot perform dome9/CloudSubnet.get, reason:' + JSON.stringify(reason);
   });
 }
 
-function CloudSubnet(dome9Connection){
+function CloudSubnet(dome9Connection) {
   this.connection = dome9Connection;
 }
 
 CloudSubnet.prototype = {
   get: get,
-  logic:logic
+  logic: logic
 };
 
-module.exports = function(dome9Connection){
+module.exports = function (dome9Connection) {
   return new CloudSubnet(dome9Connection);
 };
 

@@ -1,3 +1,7 @@
+/**
+ * Created by arik.blumin on 4/6/2016.
+ */
+
 var cookieParser = require('cookie');
 var Q = require("q");
 var request = require('request');
@@ -303,7 +307,7 @@ function createCsvRec(data, mode, path) {
       counter += 100;
       dataToWrite.forEach(function (el) {
         for (var prop in el) {
-          if ((!el[prop] || el[prop] == null)&&typeof el[prop]!="number") el[prop] = '';
+          if ((!el[prop] || el[prop] == null) && typeof el[prop] != "number") el[prop] = '';
           if (typeof(el[prop]) == "object") {
             woComma = commaHandler(JSON.stringify(el[prop]));
             wstream.write(woComma + ',');

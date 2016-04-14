@@ -2,10 +2,6 @@
  * Created by arik.blumin on 4/6/2016.
  */
 
-/**
- * Created by arik.blumin on 4/6/2016.
- */
-
 var utils = require('./../utils.js');
 var Q = require('q');
 var globals = require('./../globals');
