@@ -178,7 +178,7 @@ function logic(data) {
           var rdsSGs = obj.rdsSGMap[sgID];
           _.each(rdsSGs, function (sgRule) {
             var ruleToAdd = new AtomicRule(sgRule,
-              rds.rdsId,
+              rds.externalId,
               rds.name,
               rds.cloudAccountId,
               rds.tags, rds.instanceType, rds.isPublicAccessible, rds.status, rds.endpoint, rds.dbType);
