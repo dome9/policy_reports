@@ -276,14 +276,20 @@ function getInputs(login) {
 }
 var generalCounter = 0;
 
+var ProgressBar = require('progress');
+var bar = null;
+
 function createCsv(data, path) {
   logger.info('Creating the report. Writing to: ' + (path ? path : 'standard output'));
+  bar = new ProgressBar('[ :bar] :percent :etas', {total: data.length,complete: '=',
+    incomplete: ' ',
+    width: 40});
   return createCsvRec(data, undefined, path);
 }
 
 function createCsvRec(data, mode, path) {
-  var MAX_ITERATIONS_PER_BATCH = 80000;
-  logger.debug("Writing batch");
+  var MAX_ITERATIONS_PER_BATCH = 10000;
+  //logger.debug("Writing batch");
 
   var woComma;
   var deferred = Q.defer();
@@ -304,6 +310,10 @@ function createCsvRec(data, mode, path) {
       }
 
       var dataToWrite = data.splice(0, 100);
+      bar.tick(dataToWrite.length);
+      if (bar.complete) {
+        console.log('\ncomplete\n');
+      }
       counter += 100;
       dataToWrite.forEach(function (el) {
         for (var prop in el) {
