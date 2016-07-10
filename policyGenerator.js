@@ -19,7 +19,7 @@ program
   .option('-f, --file <file>', 'the result file path, such as ./myDir/report/csv')
   .option('-r, --report <report>', 'the report type to be generate.' +
     ' The supported reports are: instances, securityGroups, rds, nacl, ' +
-    'subnet-nacl, agent-securityGroups, hostBase and elbs')
+    'subnet-nacl, agent-securityGroups, hostBase, lambda and elbs')
   .option('-u, --username <username>', 'Dome9 username')
   .option('-p, --password <password>', 'Dome9 password')
   .option('-m, --mfa <mfa>', 'mfa')
