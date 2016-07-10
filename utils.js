@@ -388,6 +388,7 @@ exports.RequestOptions = RequestOptions;
 var dome9connection = require('./services/dome9-connection.js');
 var cloudInstance = require('./services/instances.js');
 var cloudSecurityGroups = require('./services/cloudSecurityGroups.js');
+var lambda = require('./services/lambda.js');
 var cloudElb = require('./services/cloudLoadBalancer.js');
 var cloudDbInstance = require('./services/clouddbInstance.js');
 var cloudNacl = require('./services/cloudNacl.js');
@@ -401,6 +402,7 @@ function selector(type, conf) {
   dome9connection = new dome9connection(conf.username, conf.password, conf._APIKey, conf.mfa);
   cloudInstance = new cloudInstance(dome9connection);
   cloudSecurityGroups = new cloudSecurityGroups(dome9connection);
+  lambda = new lambda(dome9connection);
   cloudElb = new cloudElb(dome9connection);
   cloudDbInstance = new cloudDbInstance(dome9connection);
   cloudNacl = new cloudNacl(dome9connection);
@@ -412,6 +414,9 @@ function selector(type, conf) {
 
   var deferredResult = null;
   switch (type) {
+    case 'lambda':
+      deferredResult = generateLambdaReport();
+      break;
     case 'instances':
       deferredResult = generateInstancesReport();
       break;
@@ -462,17 +467,34 @@ function generateInstancesReport() {
 function generateSecurityGroupsReport() {
   logger.debug("Generating Security Groups Report");
   var deferred = Q.defer();
-  Q.all([cloudInstance.get(), cloudSecurityGroups.get(), cloudElb.get()])
+  Q.all([cloudInstance.get(), cloudSecurityGroups.get(), cloudElb.get(),cloudDbInstance.get()])
     .then(function (data) {
       deferred.resolve(cloudSecurityGroups.logic({
         instances: data[0],
         securityGroups: data[1],
-        elbs: data[2]
+        elbs: data[2],
+        rdsData: data[3]
       }));
     }, function (err) {
       console.error(err);
       deferred.reject(err);
     });
+  return deferred;
+}
+
+function generateLambdaReport() {
+  logger.debug("Generating Lambda Report");
+  var deferred = Q.defer();
+  Q.all([cloudSecurityGroups.get(), lambda.get()])
+      .then(function (data) {
+        deferred.resolve(lambda.logic({
+          securityGroups: data[0],
+          lambdas: data[1]
+        }));
+      }, function (err) {
+        console.error(err);
+        deferred.reject(err);
+      });
   return deferred;
 }
 
