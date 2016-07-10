@@ -173,7 +173,7 @@ function logic(data) {
                             lambda.runtimeEnvironment
                         );
                         obj.alldata.push(ruleToAdd);
-                        obj.collectAutoCompleateValues(ruleToAdd);
+                        //obj.collectAutoCompleateValues(ruleToAdd);
                     });
                 });
             });
